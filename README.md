@@ -20,6 +20,9 @@ Chrome浏览器地址栏输入`chrome://extensions/`进入扩展程序管理中�
 
 ```sql
 mysql -h ip -u username -p  回车
+show databases;//查看所有的数据库
+use which datebase you will use//选择要使用的数据库
+show tables;//查看所有的表
 show create table system_user \G;
 ```
 
