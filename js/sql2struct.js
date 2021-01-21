@@ -21,7 +21,7 @@ new Vue({
         }
         var that = this
         // 获取缓存数据
-        chrome.runtime.sendMessage(message, function(res) {
+        chrome.runtime.sendMessage(message, function (res) {
             if (!res) { // 不存在缓存数据
                 // 初始配置数据
                 var data = {
@@ -64,56 +64,61 @@ new Vue({
                 this.structContent = ''
                 return
             }
-            var res = val.match(/\`[\w_]+\`\s+[\w_\(\)]+(\s+|\,)/g)
+            //获取所有的字段
+            var res = val.match(/\`[\w_]+\`\s+[\w_\(\)]+[\w_|\s]+\'(.+)+\'(\s|\,)/g)
             if (!res) {
                 this.structContent = 'invalid sql'
                 return
             }
+            var tabName = val.match(/\`[\w_]+\`\s\(\s/g)
+            var calName = tabName[0].match(/[\w_]+/g)
             var types = this.typeMap
             var structResult = 'type '
+            structResult += titleCase(calName[0])+' struct {'
             for (var i = 0, len = res.length; i < len; i++) {
+
+                //处理sql 字段注释 COMMENT\s\'(.+)\'
+                let comment = res[i].match(/COMMENT\s\'(.+)\'/g)
+                if (comment!=undefined){
+                    comment = ("\n\t//"+comment[0])
+                    comment = comment.replace("COMMENT","")
+                    structResult += comment
+                }
                 var field = res[i].match(/\`(.+)\`\s+(tinyint|smallint|int|mediumint|bigint|float|double|decimal|varchar|char|text|mediumtext|longtext|datetime|time|date|enum|set|blob)?/)
-                if (i == 0) {   // 第一个字段为数据表名称
-                    if (field && field[1] != undefined && field[2] == undefined) {
-                        var tbName = titleCase(field[1])
-                        structResult += tbName + ' struct {'
-                        continue
-                    } else {
-                        return
-                    }
-                } else {  // 数据表字段
-                    if (field && field[1] != undefined && field[2] != undefined) {
-                        if (types[field[2]] != undefined) {
-                            var fieldName = titleCase(field[1])
-                            var fieldType = types[field[2]]
-                            var fieldJsonName = field[1].toLowerCase()
-                            if (fieldName.toLowerCase() == 'id') {
-                                fieldName = 'ID'
-                            }
-                            structResult += '\n\t' + fieldName + ' ' + fieldType + ' '
-                            structArr = []
-                            if (this.useGorm) {
-                                structArr.push('gorm:"column:'+ fieldJsonName +'"')
-                            }
-                            if (this.useSqlx) {
-                                structArr.push('db:"column:'+ fieldJsonName +'"')
-                            }
-                            if (this.useJson) {
-                                structArr.push('json:"' + fieldJsonName + '"')
-                            }
-                            if (this.useForm) {
-                                structArr.push('form:"' + fieldJsonName + '"')
-                            }
-                            if (structArr.length > 0) {
-                                structResult += '`'+structArr.join(' ')+'`'
-                            }
-                        } else {
-                            continue
+
+                // 数据表字段
+                if (field && field[1] != undefined && field[2] != undefined) {
+                    if (types[field[2]] != undefined) {
+                        var fieldName = titleCase(field[1])
+                        var fieldType = types[field[2]]
+                        var fieldJsonName = field[1].toLowerCase()
+                        if (fieldName.toLowerCase() == 'id') {
+                            fieldName = 'ID'
+                        }
+                        structResult += '\n\t' + fieldName + ' ' + fieldType + ' '
+                        structArr = []
+                        if (this.useGorm) {
+                            structArr.push('gorm:"column:' + fieldJsonName + '"')
+                        }
+                        if (this.useSqlx) {
+                            structArr.push('db:"column:' + fieldJsonName + '"')
+                        }
+                        if (this.useJson) {
+                            structArr.push('json:"' + fieldJsonName + '"')
+                        }
+                        if (this.useForm) {
+                            structArr.push('form:"' + fieldJsonName + '"')
+                        }
+                        if (structArr.length > 0) {
+                            structResult += '`' + structArr.join(' ') + '`'
                         }
                     } else {
                         continue
                     }
+                } else {
+                    continue
                 }
+
             }
             structResult += '\n}'
             this.structContent = structResult
@@ -183,31 +188,31 @@ new Vue({
         }
     },
     methods: {
-      handleSelect(key, keyPath) {
-        
-      },
-      setCache(data) {
-        var message = {
-            act: 'setOptions',
-            data: JSON.stringify(data)
+        handleSelect(key, keyPath) {
+
+        },
+        setCache(data) {
+            var message = {
+                act: 'setOptions',
+                data: JSON.stringify(data)
+            }
+            chrome.runtime.sendMessage(message, function (res) {
+                //console.log(res)
+            })
         }
-        chrome.runtime.sendMessage(message, function(res) {
-            //console.log(res)
-        })
-      }
     }
 })
 
 // 首字母大写
 function titleCase(str) {
 
-  var array = str.toLowerCase().split("_");
-  for (var i = 0; i < array.length; i++){
-    array[i] = array[i][0].toUpperCase() + array[i].substring(1, array[i].length);
-  }
-  var string = array.join("");
+    var array = str.toLowerCase().split("_");
+    for (var i = 0; i < array.length; i++) {
+        array[i] = array[i][0].toUpperCase() + array[i].substring(1, array[i].length);
+    }
+    var string = array.join("");
 
-  return string;
+    return string;
 }
 
 // 类型映射
@@ -232,6 +237,6 @@ function getTypeMap() {
         'timestramp': 'int64',
         'enum': 'string',
         'set': 'string',
-        'blob': 'string' 
+        'blob': 'string'
     }
 }
