@@ -7,7 +7,7 @@
 1. 下载扩展源码
 
 ```shell
-git clone https://github.com/idoubi/sql2struct.git
+git clone https://github.com/linhu123/sql2struct.git
 ```
 
 2. 安装扩展
@@ -15,19 +15,18 @@ git clone https://github.com/idoubi/sql2struct.git
 Chrome浏览器地址栏输入`chrome://extensions/`进入扩展程序管理中心，
 点击“加载已解压的扩展程序”，通过源码进行安装。
 
-![](http://blogcdn.idoustudio.com/sql2struct1.png)
 
 3. 在mysql中获取生成数据表的sql语句
 
 ```sql
-show create table system_user\G;
+mysql -h ip -u username -p  回车
+show create table system_user \G;
 ```
 
 4. 进入插件主页面，把上一步得到的sql语句粘贴至左侧的输入框
 
 5. 复制右侧生成的struct，粘贴至golang代码中即可
 
-![](http://blogcdn.idoustudio.com/sql2struct2.png)
 
 ## 配置说明
 
@@ -64,8 +63,6 @@ typeMap默认的映射关系为：
     "blob": "string"
 }
 ```
-
-![](http://qiniu.idoubi.cc/options)
 
 ## Todolist
 
